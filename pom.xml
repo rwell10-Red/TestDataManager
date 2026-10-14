@@ -31,11 +31,14 @@
             <version>5.5.1</version>
         </dependency>
 
-        <!-- Jackson Databind: converts JSON files to/from Java objects -->
+        <!-- Jackson Databind 3.x: converts JSON files to/from Java objects.
+             Jackson 3 uses the NEW group id "tools.jackson.core" (2.x used
+             "com.fasterxml.jackson.core") and the new Java package "tools.jackson.*".
+             Jackson 3 requires Java 17+ (we run Java 21). -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
+            <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>2.22.3</version>
+            <version>3.2.3</version>
         </dependency>
 
     </dependencies>
