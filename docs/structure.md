@@ -109,8 +109,8 @@ frame that already has wheels and an engine.
 | 7 | config.json + test_scenarios.json | JSON data files | ✅ done |
 | 8 | JsonConfigReader (Jackson 3.x) | JSON deserialization | ✅ done |
 | 9 | TestDataManager main class | Loops, conditions, ArrayList, statistics | ⬜ next |
-| 10 | README.md | Documentation for portfolio | ⬜ |
-| 11 | Feature branch + merge | Git branching workflow | ⬜ |
+| 10 | README.md + docs/branching.md | Documentation for portfolio | ✅ done |
+| 11 | Feature branch + merge | Git branching workflow (GitHub Flow) | 🔄 in progress |
 | 12 | Push to GitHub (rwell10-Red) | Remote repos | ⬜ |
 
 ---
