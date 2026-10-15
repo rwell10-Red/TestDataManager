@@ -1,0 +1,100 @@
+[
+  {
+    "id": "TC_LOGIN_001",
+    "name": "Valid login redirects to dashboard",
+    "category": "login",
+    "type": "functional",
+    "priority": "High"
+  },
+  {
+    "id": "TC_LOGIN_002",
+    "name": "Invalid password shows generic error",
+    "category": "login",
+    "type": "negative",
+    "priority": "High"
+  },
+  {
+    "id": "TC_LOGIN_003",
+    "name": "Empty fields trigger validation messages",
+    "category": "login",
+    "type": "negative",
+    "priority": "High"
+  },
+  {
+    "id": "TC_LOGIN_004",
+    "name": "SQL injection and XSS inputs are sanitized",
+    "category": "login",
+    "type": "security",
+    "priority": "Medium"
+  },
+  {
+    "id": "TC_LOCKOUT_001",
+    "name": "Account locks after 5 failed attempts",
+    "category": "accountLockout",
+    "type": "security",
+    "priority": "High"
+  },
+  {
+    "id": "TC_RESET_001",
+    "name": "Forgot password sends reset email within 2 minutes",
+    "category": "forgotPassword",
+    "type": "functional",
+    "priority": "Medium"
+  },
+  {
+    "id": "TC_RESET_002",
+    "name": "Reset link expires after 60 minutes",
+    "category": "forgotPassword",
+    "type": "negative",
+    "priority": "Medium"
+  },
+  {
+    "id": "TC_SESSION_001",
+    "name": "Session expires after 30 minutes of inactivity",
+    "category": "session",
+    "type": "functional",
+    "priority": "High"
+  },
+  {
+    "id": "TC_SESSION_002",
+    "name": "Logout in one tab logs out all tabs",
+    "category": "session",
+    "type": "functional",
+    "priority": "Medium"
+  },
+  {
+    "id": "TC_REMEMBER_001",
+    "name": "Remember Me persists session for 30 days",
+    "category": "rememberMe",
+    "type": "functional",
+    "priority": "Medium"
+  },
+  {
+    "id": "TC_PERF_001",
+    "name": "Login page loads in under 2 seconds",
+    "category": "performance",
+    "type": "performance",
+    "priority": "Medium"
+  },
+  {
+    "id": "TC_A11Y_001",
+    "name": "Login page meets WCAG 2.1 AA accessibility",
+    "category": "accessibility",
+    "type": "accessibility",
+    "priority": "Medium"
+  },
+  {
+    "id": "TC_MOBILE_001",
+    "name": "Login page usable on 375px mobile screen",
+    "category": "mobile",
+    "type": "functional",
+    "priority": "Medium"
+  },
+  {
+    "id": "TC_REG_001",
+    "name": "Existing login still works after new feature added",
+    "category": "login",
+    "type": "regression",
+    "priority": "High"
+  }
+]

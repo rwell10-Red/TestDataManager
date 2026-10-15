@@ -210,3 +210,96 @@ The second contract method: reports the source file name (handy in test logs).
 ```
 Helper: safely reads one cell as trimmed text, returning `""` for missing cells so the
 caller never hits a null.
+
+---
+
+## File: `src/main/java/com/qa/data/TestConfig.java`
+
+Model for `config.json`. One object holds the whole config file.
+
+```java
+private String baseUrl;
+private String browser;
+private int timeout;
+private int retries;
+```
+Four fields whose **names match the JSON keys** exactly. That name-matching is how
+Jackson knows which JSON value goes into which field.
+
+```java
+public TestConfig() {}
+```
+A **no-argument constructor**. Jackson creates an empty object first, then fills the
+fields via setters, so it needs this.
+
+```java
+public String getBaseUrl() { return baseUrl; }   // + the other getters
+public void setBaseUrl(String baseUrl) { this.baseUrl = baseUrl; }  // + the other setters
+```
+Getters for our code to read values; setters for Jackson to populate them during
+deserialization.
+
+```java
+@Override public String toString() { ... }
+```
+Returns a readable one-line summary, handy for printing/logging.
+
+---
+
+## File: `src/main/java/com/qa/data/TestScenario.java`
+
+Model for ONE entry in `test_scenarios.json` (the file is an array of these).
+
+```java
+private String id;        // e.g. TC_LOGIN_001
+private String name;      // human-readable scenario title
+private String category;  // FEATURE area: login, forgotPassword, session, ...
+private String type;      // TEST TYPE: functional, negative, security, performance, ...
+private String priority;  // High / Medium / Low
+```
+Two categorization axes live here: `category` (feature) and `type` (test type) — the
+exact distinction we discussed. Plus `priority` for business urgency.
+
+No-arg constructor, getters, setters, and `toString()` — same pattern as TestConfig.
+
+---
+
+## File: `src/main/java/com/qa/data/JsonConfigReader.java`
+
+Reads both JSON files using **Jackson 3.x**.
+
+```java
+import tools.jackson.databind.json.JsonMapper;
+```
+Jackson 3's package is `tools.jackson.*` (Jackson 2 used `com.fasterxml.jackson.*`).
+
+```java
+private final JsonMapper mapper = JsonMapper.builder().build();
+```
+`JsonMapper` is Jackson 3's recommended immutable mapper, created via a builder. One
+shared instance is reused for all reads (mappers are thread-safe and reusable).
+
+```java
+public TestConfig readConfig(String resourceName) {
+    try (InputStream in = getClass().getClassLoader().getResourceAsStream(resourceName)) {
+        if (in == null) throw new IllegalStateException("Could not find resource ...");
+        return mapper.readValue(in, TestConfig.class);
+    } catch (Exception e) {
+        throw new RuntimeException("Failed to read JSON config from " + resourceName, e);
+    }
+}
+```
+Loads `config.json` from the classpath, then `readValue(in, TestConfig.class)` turns the
+JSON object into one `TestConfig`. **Deserialization** = JSON text → Java object. The
+try-with-resources auto-closes the stream; errors are wrapped with a clear message.
+
+```java
+public List<TestScenario> readScenarios(String resourceName) {
+    ...
+    TestScenario[] array = mapper.readValue(in, TestScenario[].class);
+    return List.of(array);
+}
+```
+`test_scenarios.json` is a JSON **array**, so we deserialize into a `TestScenario[]`
+(array) and wrap it in an immutable `List`. Note: no `throws IOException` is needed —
+Jackson 3 uses unchecked exceptions.

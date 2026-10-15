@@ -62,6 +62,9 @@ TestDataManager/                         ← repo root
 
    TestUser          JsonConfigReader          TestDataManager (main)
    (data model)      (reads JSON config)       (coordinates + prints stats)
+                        │  reads into
+                        ▼
+   TestConfig (config.json model)   +   TestScenario (one test_scenarios.json entry)
 ```
 
 ---
@@ -75,11 +78,11 @@ TestDataManager/                         ← repo root
 | 2 | TestUser model (POJO) | Encapsulation, constructors, getters | ✅ done |
 | 3 | DataProvider interface | Programming to an interface | ✅ done |
 | 4 | git init + first commit | Version control basics | ✅ done |
-| 5 | Generate test_users.xlsx (10+ rows) | Apache POI writing Excel | ⬜ next |
-| 6 | ExcelDataProvider (implements DataProvider) | POI reading, interface implementation | ⬜ |
-| 7 | config.json + test_scenarios.json | JSON data files | ⬜ |
-| 8 | JsonConfigReader (Jackson 3.x) | JSON deserialization | ⬜ |
-| 9 | TestDataManager main class | Loops, conditions, ArrayList, statistics | ⬜ |
+| 5 | Generate test_users.xlsx (12 rows) | Apache POI writing Excel | ✅ done |
+| 6 | ExcelDataProvider (implements DataProvider) | POI reading, interface implementation | ✅ done |
+| 7 | config.json + test_scenarios.json | JSON data files | ✅ done |
+| 8 | JsonConfigReader (Jackson 3.x) | JSON deserialization | ✅ done |
+| 9 | TestDataManager main class | Loops, conditions, ArrayList, statistics | ⬜ next |
 | 10 | README.md | Documentation for portfolio | ⬜ |
 | 11 | Feature branch + merge | Git branching workflow | ⬜ |
 | 12 | Push to GitHub (rwell10-Red) | Remote repos | ⬜ |

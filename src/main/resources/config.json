@@ -1,0 +1,6 @@
+{
+  "baseUrl": "https://www.saucedemo.com",
+  "browser": "chrome",
+  "timeout": 30,
+  "retries": 2
+}
