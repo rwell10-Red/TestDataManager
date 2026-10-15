@@ -120,6 +120,9 @@ important distinction between **branches** and **deployment environments**
 - Add JUnit tests and run them automatically in a **GitHub Actions** CI pipeline.
 - Export the statistics report to CSV/HTML.
 
+See [`docs/roadmap.md`](docs/roadmap.md) for these tracked as detailed backlog
+items (priority, scope, done-criteria, and docs to read first).
+
 ---
 
 ## What this project demonstrates
