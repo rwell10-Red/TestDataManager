@@ -69,6 +69,32 @@ TestDataManager/                         ← repo root
 
 ---
 
+## 2b. Dependency Direction & Build Order
+
+Which class needs which. An arrow means "needs / calls".
+
+```
+TestDataManager  ──needs──>  ExcelDataProvider  ──needs──>  TestUser
+   (main /                ──needs──>  JsonConfigReader   ──needs──>  TestConfig, TestScenario
+   conductor)             ──needs──>  DataProvider (interface)
+```
+
+**Why TestDataManager is built LAST even though it is the center:**
+It depends on everything else. The conductor cannot conduct an orchestra that does
+not exist yet. So we build **bottom-up** — foundation first, conductor last.
+
+| Build order | Class(es) | Reason |
+|---|---|---|
+| 1st | TestUser, DataProvider | No dependencies — pure foundation |
+| 2nd | ExcelDataProvider, JsonConfigReader | Depend only on the models/interface |
+| last | TestDataManager | Depends on all of the above |
+
+"Center" = importance (where the program runs). "Last" = build order (its parts must
+exist first). Like a car: the driver's seat is central, but it is installed into a
+frame that already has wheels and an engine.
+
+---
+
 ## 3. Task List (build order)
 
 | # | Task | Concept it teaches | Status |
@@ -96,7 +122,9 @@ TestDataManager/                         ← repo root
 $env:Path += ";$env:USERPROFILE\tools\apache-maven-3.10.0\bin"
 
 mvn -B compile          # compile the code
-mvn -B exec:java        # run the program (main class set in pom.xml)
+mvn -o exec:java        # RUN the program offline (main class set in pom.xml)
+                        #   -o = offline (use cached libs; avoids the remote-lookup stall)
+                        #   first time only, run a new plugin online once to cache it
 mvn -B clean            # delete target/ (fresh start)
 mvn -B package          # build a runnable .jar into target/
 

@@ -4,6 +4,37 @@ Every code file in the project, explained. Updated as we add files.
 
 ---
 
+## Reference Docs (official)
+
+### Java language & built-in classes (the "cheat sheet")
+Java is not terminal "commands" — it is classes with methods. Look up a class to
+see its methods.
+
+- Java 21 API reference (all built-in classes): https://docs.oracle.com/en/java/javase/21/docs/api/
+- Java Tutorials (learning-style): https://docs.oracle.com/javase/tutorial/
+- Built-in types we use:
+  - `List`: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/List.html
+  - `ArrayList`: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/ArrayList.html
+  - `Map`: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html
+  - `LinkedHashMap`: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/LinkedHashMap.html
+  - `String`: https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html
+  - `System.out` (printf/println): https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/io/PrintStream.html
+
+### Library methods (the external jars Maven downloaded)
+- Apache POI (Excel) API: https://poi.apache.org/apidocs/
+  - `WorkbookFactory`, `Workbook`, `Sheet`, `Row`, `Cell`, `DataFormatter` live under
+    `org.apache.poi.ss.usermodel`.
+  - POI quick guide: https://poi.apache.org/components/spreadsheet/quick-guide.html
+- Jackson 3 (JSON): https://github.com/FasterXML/jackson
+  - Migration/overview: https://github.com/FasterXML/jackson/blob/main/jackson3/MIGRATING_TO_JACKSON_3.md
+  - `JsonMapper.readValue(...)` is the main deserialization method.
+
+### Build & tooling
+- Maven: https://maven.apache.org/guides/
+- Git: https://git-scm.com/doc
+
+---
+
 ## File: `src/main/java/com/qa/data/TestUser.java`
 
 A **model class** (POJO = Plain Old Java Object). One `TestUser` object = one row
@@ -303,3 +334,119 @@ public List<TestScenario> readScenarios(String resourceName) {
 `test_scenarios.json` is a JSON **array**, so we deserialize into a `TestScenario[]`
 (array) and wrap it in an immutable `List`. Note: no `throws IOException` is needed —
 Jackson 3 uses unchecked exceptions.
+
+---
+
+## File: `src/main/java/com/qa/data/TestDataManager.java`
+
+The MAIN class — the "conductor". Built LAST because it depends on every other class
+(see docs/structure.md section 2b). Run it with: `mvn -o exec:java`.
+
+```java
+package com.qa.data;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+```
+Imports the collections we use: `ArrayList`/`List` (ordered collection) and
+`Map`/`LinkedHashMap` (key→value pairs that remember insertion order).
+
+```java
+public static void main(String[] args) {
+    TestDataManager app = new TestDataManager();
+    app.run();
+}
+```
+`main` is where Java starts the program (the launcher calls `public static void main`).
+It makes one TestDataManager object and calls `run()`. (Keeping logic in `run()` instead
+of `main` lets the instance methods use `this` naturally.)
+
+### STEP 1 — read config.json
+```java
+JsonConfigReader jsonReader = new JsonConfigReader();
+TestConfig config = jsonReader.readConfig("config.json");
+System.out.println("  Base URL : " + config.getBaseUrl());
+```
+Make a reader, call `readConfig(...)` to get a `TestConfig` object, then print its fields
+with the getters. `System.out.println` prints a line.
+
+### STEP 2 — read users and print them (LOOP #1)
+```java
+DataProvider excel = new ExcelDataProvider("test_users.xlsx");
+List<TestUser> users = excel.readData();
+System.out.printf("%-24s %-16s %-10s %-8s%n", "EMAIL", "NAME", "ROLE", "EXPECTED");
+for (TestUser user : users) {
+    System.out.printf("%-24s %-16s %-10s %-8s%n",
+        user.getEmail(), user.getFullName(), user.getRole(), user.getExpectedResult());
+}
+```
+Note the type is `DataProvider` (the interface), not `ExcelDataProvider` — programming to
+the interface. `readData()` returns the `List` we loop over. `printf` formats columns:
+`%-24s` = left-aligned string in a 24-wide field; `%n` = newline. The `for (TestUser user
+: users)` loop runs once per user.
+
+### STEP 3 — filter admins (LOOP + CONDITION + ArrayList)
+```java
+List<TestUser> admins = new ArrayList<>();          // empty box for results
+for (TestUser user : users) {                        // LOOP: each user
+    if (user.getRole().equalsIgnoreCase("admin")) {  // CONDITION: role is admin?
+        admins.add(user);                            // YES -> put in the box
+    }
+}
+```
+This is the core pattern. `equalsIgnoreCase` compares text ignoring upper/lowercase.
+`admins.add(user)` appends to the list. After the loop, `admins` holds only admins.
+
+### STEP 4 — statistics: users by role (a Map as a tally)
+```java
+Map<String, Integer> usersByRole = new LinkedHashMap<>();
+for (TestUser user : users) {
+    String role = user.getRole();
+    usersByRole.put(role, usersByRole.getOrDefault(role, 0) + 1);
+}
+```
+A `Map` stores `role -> count`. For each user: `getOrDefault(role, 0)` returns the current
+count (or 0 the first time we see a role), we add 1, and `put` saves it back. Result:
+`admin=4, customer=8`.
+
+```java
+for (Map.Entry<String, Integer> entry : usersByRole.entrySet()) {
+    System.out.println("  " + entry.getKey() + " : " + entry.getValue());
+}
+```
+Loop over the map's entries; `getKey()` is the role, `getValue()` is the count.
+
+### STEP 5 — scenarios by category (same tally pattern)
+```java
+List<TestScenario> scenarios = jsonReader.readScenarios("test_scenarios.json");
+Map<String, Integer> scenariosByCategory = new LinkedHashMap<>();
+for (TestScenario scenario : scenarios) {
+    String category = scenario.getCategory();
+    scenariosByCategory.put(category, scenariosByCategory.getOrDefault(category, 0) + 1);
+}
+```
+Read the 14 scenarios, then tally by `category` (feature area) exactly like Step 4.
+
+### STEP 6 — count high-priority scenarios (another filter, with a counter)
+```java
+int highPriorityCount = 0;
+for (TestScenario scenario : scenarios) {
+    if (scenario.getPriority().equalsIgnoreCase("High")) {
+        highPriorityCount++;
+    }
+}
+```
+Instead of collecting into a list, this just increments an `int` counter when the
+condition is true. `highPriorityCount++` means "add 1".
+
+### Helper
+```java
+private void printBanner(String title) {
+    System.out.println("=".repeat(62));
+    System.out.println("  " + title);
+    System.out.println("=".repeat(62));
+}
+```
+A small reusable method for the titled dividers. `"=".repeat(62)` makes a line of 62
+equals signs. Defining it once avoids repeating the three print lines everywhere.

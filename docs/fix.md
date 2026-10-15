@@ -53,16 +53,30 @@ repository "prefix" files too eagerly, which stalls in constrained/sandboxed net
 - Upstream issue: https://github.com/apache/maven/issues/13050
   ("3.10.0 might be fetching prefixes a little too eagerly")
 
-**Fix:** Added project-level `.mvn/maven.config` to disable the prefix/groupId filters:
-
+**First attempt (OVER-CORRECTED — do not use):** disabled BOTH filters outright:
 ```
 -Daether.remoteRepositoryFilter.prefixes=false
 -Daether.remoteRepositoryFilter.groupId=false
 ```
+After re-reading the official docs this was wrong on two counts:
+1. The groupId filter is INACTIVE by default (it abstains unless you supply input
+   files), so `groupId=false` did nothing.
+2. Disabling `prefixes` entirely turns off the whole filtering FEATURE, which is more
+   than we need. The docs provide a targeted property for exactly our symptom.
+
+**CORRECTED FIX (official, targeted):** per the Resolver docs, disable only the
+discovery/download of the prefixes file — not the filter feature:
+```
+-Daether.remoteRepositoryFilter.prefixes.resolvePrefixFiles=false
+```
+Source: https://maven.apache.org/resolver/remote-repository-filtering.html
+("the user should disable prefix discovery by using
+-Daether.remoteRepositoryFilter.prefixes.resolvePrefixFiles=false ... to prevent Maven
+from attempting to resolve the prefixes file").
 
 `.mvn/maven.config` is read automatically for every Maven run in this project, so the
-fix travels with the repo. After this, dependency downloads completed and builds
-reached BUILD SUCCESS.
+fix travels with the repo. Verified: clean build (`mvn -B clean compile`) reaches
+BUILD SUCCESS with no "Loaded prefixes" stall, and the RRF feature stays intact.
 
 ---
 
@@ -155,3 +169,65 @@ Created `src/main/resources/test_users.xlsx` with a one-off Apache POI generator
 email, password, firstName, lastName, role, expectedResult. Contents verified by
 reading the file back: header + **12 rows** (4 admin, 8 customer; 8 pass, 4 fail).
 Exceeds the 10-row requirement. All data is fake — never commit real credentials.
+
+---
+
+## FIX-004 — `mvn exec:java` stalls at "Scanning for projects" → run OFFLINE
+
+**Problem:** Running the program with `mvn exec:java` hung immediately after
+`Scanning for projects...`, before our code ran. This is the same Maven 3.10
+remote-lookup stall seen in FIX-002, triggered here while Maven checked remote
+repositories for plugin/metadata updates.
+
+**Wrong turn (corrected):** briefly tried bypassing Maven with a raw `java -cp` run.
+That defeats the purpose of using Maven. The right answer is in the Maven docs.
+
+**Official fix — offline mode (`-o`):**
+- Maven configuring guide: https://maven.apache.org/ref/4-LATEST/configuring.html
+- `mvn -o` ("offline") tells Maven not to contact any remote repository; it uses only
+  the local `~/.m2` cache. Since all our dependencies and the exec plugin were already
+  downloaded, offline mode skips the lookups that stalled.
+
+**Command to run the program:**
+```powershell
+$env:Path += ";$env:USERPROFILE\tools\apache-maven-3.10.0\bin"
+mvn -o exec:java      # -o = offline; main class is set in pom.xml (exec.mainClass)
+```
+Result: BUILD SUCCESS, full program output printed.
+
+**Note:** offline mode only works after the needed artifacts are cached. The first time
+you add a new plugin/dependency, run once online (plain `mvn ...`) to download it, then
+use `-o` afterward.
+
+---
+
+## FIX-005 — Correcting a bypass: helper code run with raw `javac`/`java`
+
+**What was bypassed:** The one-off `test_users.xlsx` generator (and two throwaway
+verifier classes) were compiled and run with bare `javac`/`java`, pointing a hand-built
+classpath at the `.m2` jars. That sidestepped Maven, the build tool we installed to use.
+
+**Why it is a bypass:** we standardized on Maven. Running project-adjacent Java through
+raw `javac` skips Maven's dependency and classpath management.
+
+**The Maven-native way (official):** the Exec Maven Plugin runs a main class inside
+Maven with the project's dependencies as classpath — no manual classpath assembly.
+- Plugin docs: https://www.mojohaus.org/exec-maven-plugin/
+- `java` goal: https://www.mojohaus.org/exec-maven-plugin/java-mojo.html
+- One-off main class with a chosen class:
+  `mvn -o exec:java -Dexec.mainClass=the.Class`
+
+**Resolution for this project:** `test_users.xlsx` was already generated, committed, and
+verified by reading it back, so it is left as-is (regenerating adds risk, no value). The
+throwaway generator/verifier files were deleted and never part of the build. Going
+forward, any helper main class is run via `mvn -o exec:java -Dexec.mainClass=...`, not
+raw `javac`/`java`.
+
+---
+
+## NOTE-003 — `cmd /c ... > log 2>&1` is a shell I/O pattern, not a Maven bypass
+
+For the record: wrapping Maven in `cmd /c "... > log 2>&1"` (FIX-003) does NOT bypass
+Maven. It is still the same `mvn` invocation; the wrapper only redirects Maven's own
+output to a file because this PowerShell host does not render Maven's live progress
+stream well. Maven does all the work exactly as documented.
