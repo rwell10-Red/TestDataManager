@@ -69,8 +69,7 @@ TestDataManager/
 └── docs/                           Learning & reference documentation
     ├── structure.md                Structure, diagrams, task list
     ├── code.md                     Line-by-line code explanations
-    ├── fix.md                      Every fix/decision + official docs
-    └── chat.md                     Project build log
+    └── fix.md                      Every fix/decision + official docs
 ```
 
 OOP design: `ExcelDataProvider` implements the `DataProvider` interface, so the

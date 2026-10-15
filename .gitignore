@@ -24,3 +24,6 @@ buildNumber.properties
 # ===== OS files =====
 Thumbs.db
 .DS_Store
+
+# ===== Local-only notes (kept on disk, never pushed) =====
+docs/chat.md

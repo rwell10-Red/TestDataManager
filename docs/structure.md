@@ -18,7 +18,6 @@ TestDataManager/                         ← repo root
 │
 ├── docs/                                ← reference & portfolio documentation
 │   ├── structure.md                     ← THIS file (structure + task list)
-│   ├── chat.md                          ← the full learning conversation thread
 │   ├── fix.md                           ← every fix/change, with explanation + official docs
 │   └── code.md                          ← line-by-line explanation of every code file
 │
