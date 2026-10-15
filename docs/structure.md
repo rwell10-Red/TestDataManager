@@ -110,8 +110,10 @@ frame that already has wheels and an engine.
 | 8 | JsonConfigReader (Jackson 3.x) | JSON deserialization | ✅ done |
 | 9 | TestDataManager main class | Loops, conditions, ArrayList, statistics | ⬜ next |
 | 10 | README.md + docs/branching.md | Documentation for portfolio | ✅ done |
-| 11 | Feature branch + merge | Git branching workflow (GitHub Flow) | 🔄 in progress |
-| 12 | Push to GitHub (rwell10-Red) | Remote repos | ⬜ |
+| 11 | Feature branch + merge | Git branching workflow (GitHub Flow) | ✅ done |
+| 12 | Push to GitHub (rwell10-Red) | Remote repos | ✅ done |
+
+**GitHub repo:** https://github.com/rwell10-Red/TestDataManager (public)
 
 ---
 
